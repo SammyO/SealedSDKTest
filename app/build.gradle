@@ -1,18 +1,18 @@
 plugins {
-    id 'com.android.application'
+    id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
+    id 'maven-publish'
 }
 
 android {
     namespace 'com.oddhov.sealedsdktest'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
-        applicationId "com.oddhov.sealedsdktest"
         minSdk 21
         targetSdk 32
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "0.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -40,4 +40,64 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/SammyO/SealedSDKTest")
+            credentials {
+                username ""
+                password ""
+            }
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier 'sources'
+    destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
+}
+
+publishing {
+    publications {
+        publish(MavenPublication) {
+            groupId = "com.oddhov.sealedsdktest"
+            artifactId = 'app'
+            version = "0.3"
+
+            pom.withXml {
+                // Custom values
+
+                // Name
+                asNode().appendNode('name', 'app')
+
+                // Description
+                asNode().appendNode(
+                        'description',
+                        'SDK distributed to test sealed classes and interface issues.'
+                )
+
+                // URL
+                asNode().appendNode('url', 'https://maven.pkg.github.com/SammyO/SealedSDKTest')
+
+                // Licenses
+                asNode().appendNode('licenses').appendNode('license').appendNode('name', 'MIT License')
+
+                // SCM
+                asNode().appendNode('scm').appendNode('url', 'https://maven.pkg.github.com/SammyO/SealedSDKTest/main')
+
+                // Properties
+                def propertiesNode = asNode().appendNode('properties')
+                propertiesNode.appendNode('branch', 'main')
+                propertiesNode.appendNode('version', "0.1")
+
+            }
+
+            artifact(sourcesJar)
+            artifact("$buildDir/outputs/aar/app-debug.aar")
+        }
+    }
 }
